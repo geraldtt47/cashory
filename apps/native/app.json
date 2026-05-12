@@ -19,6 +19,9 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "android": {
+      "package": "com.anonymous.CashoryDemo"
     }
   }
 }

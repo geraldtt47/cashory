@@ -26,8 +26,8 @@
     "db:studio": "turbo -F @cashory-demo/db db:studio",
     "db:generate": "turbo -F @cashory-demo/db db:generate",
     "db:migrate": "turbo -F @cashory-demo/db db:migrate",
-    "mobile:android": "turbo -F native android",
-    "mobile:ios": "turbo -F native ios"
+    "mobile:android": "cd apps/native && bun run android",
+    "mobile:ios": "cd apps/native && bun run ios"
   },
   "dependencies": {
     "@cashory-demo/env": "workspace:*",
@@ -37,7 +37,7 @@
   "devDependencies": {
     "@cashory-demo/config": "workspace:*",
     "@types/bun": "catalog:",
-    "turbo": "^2.8.12",
+    "turbo": "^2.9.12",
     "typescript": "catalog:"
   },
   "packageManager": "bun@1.2.19"
