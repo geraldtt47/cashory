@@ -25,7 +25,9 @@
     "db:push": "turbo -F @cashory-demo/db db:push",
     "db:studio": "turbo -F @cashory-demo/db db:studio",
     "db:generate": "turbo -F @cashory-demo/db db:generate",
-    "db:migrate": "turbo -F @cashory-demo/db db:migrate"
+    "db:migrate": "turbo -F @cashory-demo/db db:migrate",
+    "mobile:android": "cd apps/native && bun run android",
+    "mobile:ios": "cd apps/native && bun run ios"
   },
   "dependencies": {
     "@cashory-demo/env": "workspace:*",
