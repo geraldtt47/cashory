@@ -7,6 +7,9 @@
     "start": "expo start",
     "dev": "expo start --clear",
     "android": "expo run:android --device",
+    "android:release:test": "node scripts/run-android-device.mjs test",
+    "android:release:prod": "node scripts/run-android-device.mjs prod",
+    "android:standalone": "bun run android:release:prod",
     "ios": "expo run:ios --device",
     "prebuild": "expo prebuild",
     "web": "expo start --web"

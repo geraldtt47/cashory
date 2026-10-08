@@ -26,7 +26,15 @@
     "db:studio": "turbo -F @cashory-demo/db db:studio",
     "db:generate": "turbo -F @cashory-demo/db db:generate",
     "db:migrate": "turbo -F @cashory-demo/db db:migrate",
+    "docker:compose": "docker compose -p cashory-demo --env-file .env -f compose/docker-compose.yml -f compose/docker-compose.local.yml",
+    "docker:infra:up": "node scripts/docker-infra-up.mjs",
+    "docker:infra:down": "bun run docker:compose -- down",
+    "docker:infra:verify": "node scripts/docker-infra-verify.mjs",
+    "setup:local-env": "node scripts/setup-local-env.mjs",
+    "setup:app-env": "node scripts/setup-app-env.mjs",
     "mobile:android": "cd apps/native && bun run android",
+    "mobile:android:release:test": "cd apps/native && bun run android:release:test",
+    "mobile:android:release": "cd apps/native && bun run android:release:prod",
     "mobile:ios": "cd apps/native && bun run ios"
   },
   "dependencies": {
