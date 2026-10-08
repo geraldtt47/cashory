@@ -1,0 +1,12 @@
+# Local development host ports.
+# Mailpit UI/SMTP are shifted (8026/1026) so another project's Mailpit can use 8025/1025.
+
+services:
+  postgres:
+    ports:
+      - '${POSTGRES_HOST_PORT:-5432}:5432'
+
+  mailpit:
+    ports:
+      - '${SMTP_PORT:-1026}:1025'
+      - '8026:8025'

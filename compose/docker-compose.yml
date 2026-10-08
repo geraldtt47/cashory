@@ -1,0 +1,38 @@
+# Cashory — local infrastructure (PostgreSQL, Mailpit).
+# Host ports: compose/docker-compose.local.yml
+# Start: bun run docker:infra:up
+
+services:
+  postgres:
+    image: postgres:17
+    container_name: cashory-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-cashory}
+    volumes:
+      - cashory_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: cashory-mailpit
+    restart: unless-stopped
+    environment:
+      MP_UI_BIND_ADDR: 0.0.0.0:8025
+      MP_SMTP_BIND_ADDR: 0.0.0.0:1025
+    healthcheck:
+      test: ['CMD', 'wget', '-q', '-O', '/dev/null', 'http://localhost:8025/']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  cashory_postgres_data:

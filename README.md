@@ -102,8 +102,8 @@ flowchart TD
 ### Prerequisites
 
 - **Bun** `1.2.19` or newer
+- **Docker Desktop** for local Postgres and Mailpit (`bun run docker:infra:up`)
 - **Node-compatible mobile toolchain** for Expo development
-- **PostgreSQL** database for application data
 - **Expo Go** or an iOS/Android simulator/device for running the native app
 
 ### Core Dependencies
@@ -150,31 +150,24 @@ cd cashory-demo
 bun install
 ```
 
-### 2. Configure environment variables
-
-Create the server environment file at `apps/server/.env`:
-
-```env
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/cashory
-BETTER_AUTH_SECRET=replace-with-a-random-secret-at-least-32-characters-long
-BETTER_AUTH_URL=http://localhost:3000
-CORS_ORIGIN=http://localhost:8081
-NODE_ENV=development
-```
-
-Create the native environment file at `apps/native/.env`:
-
-```env
-EXPO_PUBLIC_SERVER_URL=http://localhost:3000
-```
-
-### 3. Prepare the database
-
-Push the current schema to PostgreSQL:
+### 2. Start local infrastructure
 
 ```bash
-bun run db:push
+bun run docker:infra:up
 ```
+
+This creates missing env files (root `.env`, `apps/server/.env`, `apps/native/.env`), starts Postgres and Mailpit, applies the schema, and prints a development access summary. `bun run docker:infra:verify` prints that summary again after the containers respond. Details: [docs/local-infrastructure.md](docs/local-infrastructure.md).
+
+| Service | Link | Login |
+| --- | --- | --- |
+| Mailpit inbox | http://127.0.0.1:8026 | None. Open the link. |
+| Postgres | `127.0.0.1:5432`, database `cashory` | `postgres` / `postgres`, or the user and password in root `.env` |
+| Database UI | `bun run db:studio` → https://local.drizzle.studio | None. Uses the Postgres URL from the summary |
+| API | http://127.0.0.1:3000 | Available after `bun run dev` |
+
+The summary prints the Postgres user, password, and connection URL on separate lines so they can be copied from the terminal. It does not print `BETTER_AUTH_SECRET`. Sign-up stays in the mobile app.
+
+To use your own Postgres instead of Docker, create `apps/server/.env` and `apps/native/.env` from the `.env.example` files in those apps, then run `bun run db:push`.
 
 Optional database commands:
 
@@ -184,7 +177,7 @@ bun run db:migrate
 bun run db:studio
 ```
 
-### 4. Start the development environment
+### 3. Start the development environment
 
 Run both the API and mobile app:
 
@@ -204,7 +197,7 @@ Run the mobile app only:
 bun run dev:native
 ```
 
-### 5. Check types before opening a pull request
+### 4. Check types before opening a pull request
 
 ```bash
 bun run check-types
@@ -333,6 +326,10 @@ cashory-demo/
 │           ├── middleware/   # Auth middleware
 │           ├── routes/       # Hono route modules
 │           └── services/     # Business logic and DB access
+├── compose/                  # Postgres + Mailpit for local dev
+├── docs/
+│   └── local-infrastructure.md
+├── scripts/                  # docker:infra:* helpers
 ├── packages/
 │   ├── auth/                 # Better Auth server configuration
 │   ├── config/               # Shared TypeScript config
@@ -356,7 +353,7 @@ cashory-demo/
 
 1. Create a feature branch.
 2. Install dependencies with `bun install`.
-3. Run the database locally and configure environment variables.
+3. Run `bun run docker:infra:up` so Postgres and Mailpit are up and the access summary is printed.
 4. Implement the change in the appropriate app or shared package.
 5. Run `bun run check-types`.
 6. Open a pull request with a clear summary of user-facing and technical changes.
@@ -395,8 +392,8 @@ If you plan to distribute or open-source the project, add a license file and upd
 
 ### Database commands fail
 
-- Confirm PostgreSQL is running and accepting connections.
-- Verify `DATABASE_URL` in `apps/server/.env`.
+- Run `bun run docker:infra:verify` to confirm Postgres and reprint the development login summary.
+- Verify `DATABASE_URL` in `apps/server/.env` matches the Postgres URL from that summary.
 - Re-run `bun run db:push` after fixing connectivity or credential issues.
 
 ### PDF sharing does not open on device
