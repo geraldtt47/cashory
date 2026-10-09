@@ -93,7 +93,7 @@ export default function Notifications() {
               </Pressable>
             </>
           }
-        />{" "}
+        />
         {/* List of Notifications */}
         <View className="flex-col w-full">
           {isLoading ? (

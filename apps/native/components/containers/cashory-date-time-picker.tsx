@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { View, Text, Pressable, Modal, Platform } from "react-native";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerAndroid,
+} from "@react-native-community/datetimepicker";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useThemeColors } from "@/lib/use-theme-colors";
 import { ONBOARDING_FONT_FAMILY } from "@/lib/const/onboarding-typography";
@@ -13,10 +15,42 @@ export interface CashoryDateTimePickerProps {
   onCancel: () => void;
 }
 
+function openAndroidDateTimePicker(
+  value: Date,
+  onDateChange: (date: Date) => void,
+  onConfirm: () => void,
+  onCancel: () => void,
+) {
+  DateTimePickerAndroid.open({
+    value,
+    mode: "date",
+    onChange: (event, selectedDate) => {
+      if (event.type === "dismissed" || !selectedDate) {
+        onCancel();
+        return;
+      }
+
+      DateTimePickerAndroid.open({
+        value: selectedDate,
+        mode: "time",
+        is24Hour: false,
+        onChange: (timeEvent, selectedTime) => {
+          if (timeEvent.type === "dismissed" || !selectedTime) {
+            onCancel();
+            return;
+          }
+          onDateChange(selectedTime);
+          onConfirm();
+        },
+      });
+    },
+  });
+}
+
 /**
  * Organism: A cross-platform Date & Time picker.
  * iOS: Shows a modal with a spinner and Cancel/Done buttons.
- * Android: Shows the native picker directly.
+ * Android: Native date then time dialogs (imperative API avoids dismiss crash).
  */
 export const CashoryDateTimePicker: React.FC<CashoryDateTimePickerProps> = ({
   visible,
@@ -28,25 +62,20 @@ export const CashoryDateTimePicker: React.FC<CashoryDateTimePickerProps> = ({
   const { isDark } = useThemeColors();
   const insets = useSafeAreaInsets();
 
-  if (!visible) return null;
+  useEffect(() => {
+    if (Platform.OS !== "android" || !visible) {
+      return;
+    }
+
+    openAndroidDateTimePicker(value, onDateChange, onConfirm, onCancel);
+  }, [visible]);
 
   if (Platform.OS === "android") {
-    return (
-      <DateTimePicker
-        value={value}
-        mode="datetime"
-        onChange={(_, date) => {
-          onCancel(); // close picker
-          if (date) {
-            onDateChange(date);
-            onConfirm();
-          }
-        }}
-      />
-    );
+    return null;
   }
 
-  // iOS
+  if (!visible) return null;
+
   return (
     <Modal
       transparent
@@ -76,10 +105,7 @@ export const CashoryDateTimePicker: React.FC<CashoryDateTimePickerProps> = ({
             >
               Select Date & Time
             </Text>
-            <Pressable
-              onPress={onConfirm}
-              className="py-1 px-2"
-            >
+            <Pressable onPress={onConfirm} className="py-1 px-2">
               <Text
                 className="text-[16px] text-brand-green-500 dark:text-brand-white"
                 style={{ fontFamily: ONBOARDING_FONT_FAMILY.bold }}

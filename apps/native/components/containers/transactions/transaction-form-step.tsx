@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import React from "react";
+import { resolveSelectOption, type SelectValue } from "@/lib/select-option";
 import { SelectOption } from "@/types/transactions";
 import useAuthTheme from "@/hooks/use-auth-theme";
 import { FormFieldLabel } from "@/components/ui/form-field-label";
@@ -13,9 +14,9 @@ import { FormDateField } from "@/components/ui/form-date-field";
 export interface TransactionFormStepProps {
   amount: string;
   onAmountChange: (text: string) => void;
-  selectedCategory: SelectOption | undefined;
+  selectedCategory: SelectValue;
   onCategoryChange: (val: SelectOption | undefined) => void;
-  selectedWallet: SelectOption | undefined;
+  selectedWallet: SelectValue;
   onWalletChange: (val: SelectOption | undefined) => void;
   dateDisplay: string | null;
   onDatePress: () => void;
@@ -56,8 +57,10 @@ export default function TransactionFormStep({
         <View className="flex-1 flex-col gap-y-2.5">
           <FormFieldLabel>Add Category</FormFieldLabel>
           <Select
-            value={selectedCategory}
-            onValueChange={onCategoryChange}
+            value={resolveSelectOption(selectedCategory, categories)}
+            onValueChange={(val) =>
+              onCategoryChange(resolveSelectOption(val as SelectValue, categories))
+            }
             presentation="bottom-sheet"
           >
             <Select.Trigger
@@ -100,8 +103,10 @@ export default function TransactionFormStep({
         <View className="flex-1 flex-col gap-y-2.5">
           <FormFieldLabel>Wallet From</FormFieldLabel>
           <Select
-            value={selectedWallet}
-            onValueChange={onWalletChange}
+            value={resolveSelectOption(selectedWallet, wallets)}
+            onValueChange={(val) =>
+              onWalletChange(resolveSelectOption(val as SelectValue, wallets))
+            }
             presentation="bottom-sheet"
           >
             <Select.Trigger

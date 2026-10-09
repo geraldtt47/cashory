@@ -1,5 +1,6 @@
 import { View, Text } from "react-native";
 import React from "react";
+import { resolveSelectOption, type SelectValue } from "@/lib/select-option";
 import { SelectOption } from "@/types/transactions";
 import { useThemeColors } from "@/lib/use-theme-colors";
 import { GeneralChecklist2 } from "@/components/ui/icons/GeneralChecklist2";
@@ -11,8 +12,8 @@ import FormDisplayField from "@/components/base/form-display-field";
 
 interface TransactionSummaryStepProps {
   amount: string;
-  selectedCategory: SelectOption | undefined;
-  selectedWallet: SelectOption | undefined;
+  selectedCategory: SelectValue;
+  selectedWallet: SelectValue;
   selectedDate: Date;
   isDateConfirmed: boolean;
   note: string;
@@ -33,15 +34,11 @@ export default function TransactionSummaryStep({
   const { iconColor } = useThemeColors();
 
   const getCategoryDisplay = () => {
-    if (!selectedCategory) return "Select Category";
-    const cat = categories.find((c) => c.value === selectedCategory.value);
-    return cat ? cat.label : "Select Category";
+    return resolveSelectOption(selectedCategory, categories)?.label ?? "Select Category";
   };
 
   const getWalletDisplay = () => {
-    if (!selectedWallet) return "Select the source";
-    const wallet = wallets.find((w) => w.value === selectedWallet.value);
-    return wallet ? wallet.label : "Select the source";
+    return resolveSelectOption(selectedWallet, wallets)?.label ?? "Select the source";
   };
 
   const checkIcon = (

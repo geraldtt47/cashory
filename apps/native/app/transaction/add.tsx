@@ -17,6 +17,11 @@ import { CashoryDateTimePicker } from "@/components/containers/cashory-date-time
 import { formatDateTime } from "@/lib/format";
 import CashoryConfirmationModal from "@/components/base/cashory-confirmation-modal";
 import TransactionSummaryStep from "@/components/containers/transactions/transaction-summary-step";
+import {
+  getSelectOptionId,
+  resolveSelectOption,
+  type SelectValue,
+} from "@/lib/select-option";
 
 export default function AddTransaction() {
   const { type } = useLocalSearchParams<{ type: string }>();
@@ -25,12 +30,8 @@ export default function AddTransaction() {
   const insets = useSafeAreaInsets();
 
   const [currentStep, setCurrentStep] = useState<TransactionStep>(1);
-  const [selectedWallet, setSelectedWallet] = useState<
-    SelectOption | undefined
-  >();
-  const [selectedCategory, setSelectedCategory] = useState<
-    SelectOption | undefined
-  >();
+  const [selectedWallet, setSelectedWallet] = useState<SelectValue>();
+  const [selectedCategory, setSelectedCategory] = useState<SelectValue>();
   const [amount, setAmount] = useState<string>("");
   const [note, setNote] = useState<string>("");
   const [selectedDate, setSelectedDate] = useState<Date>(new Date());
@@ -66,13 +67,34 @@ export default function AddTransaction() {
 
   const handleNext = () => {
     if (currentStep === 2) {
+      const walletId = getSelectOptionId(selectedWallet, wallets);
+      const category = resolveSelectOption(selectedCategory, categories);
+      const parsedAmount = Number(amount);
+
+      if (!walletId) {
+        Alert.alert("Validation", "Please select a wallet.");
+        return;
+      }
+      if (!category) {
+        Alert.alert("Validation", "Please select a category.");
+        return;
+      }
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) {
+        Alert.alert("Validation", "Please enter an amount greater than zero.");
+        return;
+      }
+      if (!isDateConfirmed) {
+        Alert.alert("Validation", "Please select a date and time.");
+        return;
+      }
+
       const validation = createTransactionSchema.safeParse({
-        walletId: selectedWallet?.value || "",
-        categoryId: selectedCategory?.value || "",
+        walletId,
+        categoryId: category.value,
         type: transactionType,
-        amount: Number(amount) || 0,
-        description: selectedCategory?.label || "Transaction",
-        note: note || undefined,
+        amount: parsedAmount,
+        description: category.label,
+        note: note.trim() || undefined,
         transactionDate: selectedDate.toISOString(),
       });
 
@@ -100,15 +122,17 @@ export default function AddTransaction() {
 
   const handleConfirmSave = async () => {
     try {
-      if (!selectedWallet || !selectedCategory) return;
+      const walletId = getSelectOptionId(selectedWallet, wallets);
+      const category = resolveSelectOption(selectedCategory, categories);
+      if (!walletId || !category) return;
 
       await createTransaction.mutateAsync({
-        walletId: selectedWallet.value,
-        categoryId: selectedCategory.value,
+        walletId,
+        categoryId: category.value,
         type: transactionType,
         amount: Number(amount),
-        description: selectedCategory.label,
-        note,
+        description: category.label,
+        note: note.trim() || undefined,
         transactionDate: selectedDate.toISOString(),
       });
 

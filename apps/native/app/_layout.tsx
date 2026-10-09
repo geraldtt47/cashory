@@ -29,7 +29,6 @@ function StackLayout() {
       <Stack.Screen name="invoices" options={{ headerShown: false }} />
       <Stack.Screen name="category" options={{ headerShown: false }} />
       <Stack.Screen name="wallet" options={{ headerShown: false }} />
-      <Stack.Screen name="budget" options={{ headerShown: false }} />
       <Stack.Screen name="transaction/add" options={{ headerShown: false }} />
       <Stack.Screen name="transaction/[id]" options={{ headerShown: false }} />
       <Stack.Screen name="notifications" options={{ headerShown: false }} />
