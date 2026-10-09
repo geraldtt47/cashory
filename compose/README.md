@@ -22,6 +22,6 @@ bun run docker:infra:verify
 
 | Service | Host | URL / notes |
 | --- | --- | --- |
-| Postgres | **5432** | User, password, and URL are printed after `docker:infra:up` |
+| Postgres | **5433** (host) | User, password, and URL are printed after `docker:infra:up` |
 | Mailpit SMTP | **1026** | `SMTP_PORT` |
 | Mailpit UI | **8026** | http://127.0.0.1:8026 — no login |

@@ -3,6 +3,7 @@ import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { createInterface } from 'node:readline';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { readPostgresSettings } from './docker-infra-urls.mjs';
 
 const projectRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -15,7 +16,7 @@ const targets = [
     label: 'apps/server/.env',
     examplePath: join(projectRoot, 'apps/server/.env.example'),
     envPath: join(projectRoot, 'apps/server/.env'),
-    prepare: withDevAuthSecret,
+    prepare: prepareServerEnv,
   },
   {
     label: 'apps/native/.env',
@@ -31,6 +32,18 @@ function withDevAuthSecret(content) {
   }
   const secret = randomBytes(32).toString('base64url');
   return content.replace(/^BETTER_AUTH_SECRET=.*$/m, `BETTER_AUTH_SECRET=${secret}`);
+}
+
+function withDockerDatabaseUrl(content) {
+  if (!/^DATABASE_URL=/m.test(content)) {
+    return content;
+  }
+  const { url } = readPostgresSettings(projectRoot);
+  return content.replace(/^DATABASE_URL=.*$/m, `DATABASE_URL=${url}`);
+}
+
+function prepareServerEnv(content) {
+  return withDockerDatabaseUrl(withDevAuthSecret(content));
 }
 
 function parseEnvKeys(content) {
