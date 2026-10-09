@@ -24,9 +24,22 @@ config.resolver.nodeModulesPaths = [
 ];
 config.resolver.unstable_enablePackageExports = true;
 
-const uniwindConfig = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
+// Expo's virtual entry imports `./node_modules/expo-router/entry`, which breaks when Bun
+// hoists dependencies to the monorepo root (no apps/native/node_modules/expo-router).
+const defaultResolveRequest = config.resolver.resolveRequest;
+const hoistedNodeModulesPrefix = /^\.\/node_modules[\\/]/;
+config.resolver.resolveRequest = (context, moduleName, platform) => {
+  let resolvedModuleName = moduleName;
+  if (hoistedNodeModulesPrefix.test(moduleName)) {
+    resolvedModuleName = moduleName.replace(hoistedNodeModulesPrefix, "");
+  }
+  if (defaultResolveRequest) {
+    return defaultResolveRequest(context, resolvedModuleName, platform);
+  }
+  return context.resolveRequest(context, resolvedModuleName, platform);
+};
+
+module.exports = withUniwindConfig(wrapWithReanimatedMetroConfig(config), {
   cssEntryFile: "./global.css",
   dtsFile: "./uniwind-types.d.ts",
 });
-
-module.exports = uniwindConfig;

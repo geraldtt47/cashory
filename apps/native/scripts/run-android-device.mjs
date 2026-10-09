@@ -1,13 +1,10 @@
 #!/usr/bin/env node
 
-import { spawnSync } from 'node:child_process';
-import { createRequire } from 'node:module';
 import { existsSync } from 'node:fs';
-import { join } from 'node:path';
 
+import { runExpo } from './expo-cli.mjs';
 import {
   loadMobileEnvLocal,
-  projectRoot,
   readCredentialsExample,
   resolveKeystorePath,
 } from './load-mobile-env.mjs';
@@ -24,9 +21,6 @@ if (!['test', 'prod'].includes(signingMode)) {
 }
 
 loadMobileEnvLocal();
-
-process.env.EXPO_NO_METRO_WORKSPACE_ROOT =
-  process.env.EXPO_NO_METRO_WORKSPACE_ROOT ?? '1';
 
 if (signingMode === 'prod') {
   const credentialsExample = readCredentialsExample();
@@ -54,36 +48,6 @@ if (signingMode === 'prod') {
 }
 
 process.env.ANDROID_RELEASE_SIGNING_MODE = signingMode;
-
-function resolveExpoCli() {
-  const require = createRequire(join(projectRoot, 'package.json'));
-  try {
-    return require.resolve('expo/bin/cli');
-  } catch {
-    fail(
-      'Could not resolve expo CLI. Run `bun install` from the repo root.',
-    );
-  }
-}
-
-const expoCli = resolveExpoCli();
-
-function runExpo(args) {
-  console.log(`Running expo ${args.join(' ')}...`);
-  const result = spawnSync(process.execPath, [expoCli, ...args], {
-    stdio: 'inherit',
-    cwd: projectRoot,
-    env: process.env,
-  });
-
-  if (result.error) {
-    fail(`Failed to run expo: ${result.error.message}`);
-  }
-
-  if (result.status !== 0) {
-    process.exit(result.status ?? 1);
-  }
-}
 
 runExpo(['prebuild', '--platform', 'android']);
 runExpo(['run:android', '--device', '--variant', 'release', '--no-bundler']);

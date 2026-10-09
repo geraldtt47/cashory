@@ -35,7 +35,17 @@
     "mobile:android": "cd apps/native && bun run android",
     "mobile:android:release:test": "cd apps/native && bun run android:release:test",
     "mobile:android:release": "cd apps/native && bun run android:release:prod",
-    "mobile:ios": "cd apps/native && bun run ios"
+    "mobile:ios": "cd apps/native && bun run ios",
+    "mobile:prebuild": "cd apps/native && bun run prebuild",
+    "mobile:prebuild:android": "cd apps/native && bun run prebuild:android",
+    "mobile:prebuild:ios": "cd apps/native && bun run prebuild:ios",
+    "mobile:prebuild:clean": "cd apps/native && bun run prebuild:clean",
+    "mobile:prebuild:android:clean": "cd apps/native && bun run prebuild:android:clean",
+    "mobile:prebuild:ios:clean": "cd apps/native && bun run prebuild:ios:clean",
+    "mobile:keystore:create": "cd apps/native && bun run keystore:create",
+    "mobile:build:aab": "cd apps/native && bun run build:aab",
+    "mobile:build:apk": "cd apps/native && bun run build:apk",
+    "mobile:verify:signature": "cd apps/native && bun run verify:signature"
   },
   "dependencies": {
     "@cashory-demo/env": "workspace:*",
