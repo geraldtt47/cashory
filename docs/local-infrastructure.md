@@ -9,7 +9,7 @@ PostgreSQL and Mailpit for local development. The Hono API and Expo app run on t
 | Service | Link | Login |
 | --- | --- | --- |
 | Mailpit inbox | http://127.0.0.1:8026 | None. Open the link. |
-| Postgres | `127.0.0.1` port `5432`, database `cashory` | User `postgres`, password `postgres`, unless root `.env` overrides them |
+| Postgres | `127.0.0.1` port `5433` (default), database `cashory` | User `postgres`, password `postgres`, unless root `.env` overrides them |
 | Database UI | `bun run db:studio` then https://local.drizzle.studio | None. Studio uses the Postgres URL from the summary |
 | API | http://127.0.0.1:3000 | Available after `bun run dev` |
 
@@ -78,11 +78,11 @@ bun run docker:infra:verify
 
 | Service | Host | Container |
 | --- | --- | --- |
-| Postgres | **5432** (`POSTGRES_HOST_PORT`) | 5432 |
+| Postgres | **5433** (`POSTGRES_HOST_PORT`) | 5432 |
 | Mailpit SMTP | **1026** (`SMTP_PORT`) | 1025 |
 | Mailpit UI | **8026** | 8025 |
 
-Mailpit uses 8026/1026 so another local project can keep 8025/1025. If host port 5432 is already taken, change `POSTGRES_HOST_PORT` in `.env` and the matching `DATABASE_URL` in `apps/server/.env`, then run `bun run docker:infra:up` again.
+Mailpit uses 8026/1026 so another local project can keep 8025/1025. Docker Postgres defaults to host port **5433** so it does not collide with a local PostgreSQL on 5432. `docker:infra:up` syncs `apps/server/.env` `DATABASE_URL` from root `.env` and can move you to 5433 automatically when 5432 points at another server.
 
 ## Env maintenance
 
@@ -102,8 +102,17 @@ Use **http://127.0.0.1:8026**. Port 1026 is SMTP, not the inbox. Check `bun run 
 
 ### Postgres connection fails
 
-Read the user, password, and URL from the summary (`bun run docker:infra:verify`). Those values come from root `.env`. `apps/server/.env` `DATABASE_URL` must point at the same host, port, database, and password.
+Read the user, password, and URL from the summary (`bun run docker:infra:verify`). Those values come from root `.env`. `apps/server/.env` `DATABASE_URL` must point at the same host, port, database, and password. Re-run `bun run docker:infra:up` to sync it from root `.env`.
 
 ### Port already allocated
 
 Change the host port in root `.env` (`POSTGRES_HOST_PORT` or `SMTP_PORT`) and keep `apps/server/.env` `DATABASE_URL` in sync for Postgres. Mailpit's UI host port is **8026** in [`compose/docker-compose.local.yml`](../compose/docker-compose.local.yml).
+
+### Physical device cannot sign in ("Network request failed")
+
+The API URL in the access summary (`http://127.0.0.1:3000`) only works on the development PC. A phone must use your PC's LAN address.
+
+1. Run `bun run docker:infra:verify` and copy the **API (phone)** line, or set `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env` to `http://<LAN-IPv4>:3000`.
+2. Restart Expo/Metro so `EXPO_PUBLIC_SERVER_URL` is picked up.
+3. On the phone (same Wi‑Fi), open `http://<LAN-IPv4>:3000/api/auth/get-session` in the browser. If it does not load, check firewall rules for port **3000**.
+4. Android dev builds use HTTP in development; after changing `usesCleartextTraffic` in `app.config.js`, run prebuild and reinstall the app.

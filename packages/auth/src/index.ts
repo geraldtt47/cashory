@@ -15,6 +15,7 @@ export const auth = betterAuth({
   }),
   trustedOrigins: [
     env.CORS_ORIGIN,
+    "cashory-demo://",
     "cashory://",
     "cashory.exp.direct://",
     "mybettertapp://",

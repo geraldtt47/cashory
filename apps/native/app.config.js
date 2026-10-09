@@ -76,6 +76,7 @@ module.exports = {
       'expo-secure-store',
       '@react-native-community/datetimepicker',
       'expo-sharing',
+      'expo-web-browser',
       [
         withAndroidReleaseSigning,
         {
@@ -97,6 +98,9 @@ module.exports = {
     },
     android: {
       package: 'com.anonymous.CashoryDemo',
+      // Dev API uses http:// (LAN IP). Required for physical devices after prebuild.
+      usesCleartextTraffic:
+        (process.env.NODE_ENV ?? 'development') !== 'production',
     },
   },
 };

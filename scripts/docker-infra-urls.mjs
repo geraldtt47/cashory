@@ -1,4 +1,5 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { networkInterfaces } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -8,7 +9,7 @@ const postgresDefaults = {
   POSTGRES_USER: 'postgres',
   POSTGRES_PASSWORD: 'postgres',
   POSTGRES_DB: 'cashory',
-  POSTGRES_HOST_PORT: '5432',
+  POSTGRES_HOST_PORT: '5433',
 };
 
 export const mailpitUiUrl = 'http://127.0.0.1:8026';
@@ -49,6 +50,27 @@ function pick(env, key) {
     return postgresDefaults[key];
   }
   return value;
+}
+
+/** First likely Wi-Fi/LAN IPv4 (skips loopback; prefers 192.168.x / 10.x). */
+export function detectLanIPv4() {
+  const candidates = [];
+  for (const iface of Object.values(networkInterfaces())) {
+    if (!iface) {
+      continue;
+    }
+    for (const net of iface) {
+      const isIPv4 = net.family === 'IPv4' || net.family === 4;
+      if (!isIPv4 || net.internal) {
+        continue;
+      }
+      candidates.push(net.address);
+    }
+  }
+  const preferred = candidates.find(
+    (ip) => ip.startsWith('192.168.') || ip.startsWith('10.'),
+  );
+  return preferred ?? candidates[0] ?? null;
 }
 
 export function readPostgresSettings(root = projectRoot) {
@@ -99,7 +121,16 @@ export function printDevAccessSummary(root = projectRoot) {
   line('Database UI', 'bun run db:studio');
   continuation(terminalLink(drizzleStudioUrl));
   continuation('Login: none — uses the Postgres URL above\n');
-  line('API', terminalLink(apiUrl));
+  line('API (this PC)', terminalLink(apiUrl));
   continuation('Available after: bun run dev\n');
+  const lanIp = detectLanIPv4();
+  if (lanIp) {
+    const deviceApiUrl = `http://${lanIp}:3000`;
+    line('API (phone)', terminalLink(deviceApiUrl));
+    continuation(
+      `Set apps/native/.env EXPO_PUBLIC_SERVER_URL=${deviceApiUrl}`,
+    );
+    continuation('Test on device browser: /api/auth/get-session\n');
+  }
   console.log('Next: bun run dev');
 }

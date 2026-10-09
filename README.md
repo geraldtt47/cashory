@@ -161,7 +161,7 @@ This creates missing env files (root `.env`, `apps/server/.env`, `apps/native/.e
 | Service | Link | Login |
 | --- | --- | --- |
 | Mailpit inbox | http://127.0.0.1:8026 | None. Open the link. |
-| Postgres | `127.0.0.1:5432`, database `cashory` | `postgres` / `postgres`, or the user and password in root `.env` |
+| Postgres | `127.0.0.1:5433` (default), database `cashory` | `postgres` / `postgres`, or the user and password in root `.env` |
 | Database UI | `bun run db:studio` → https://local.drizzle.studio | None. Uses the Postgres URL from the summary |
 | API | http://127.0.0.1:3000 | Available after `bun run dev` |
 
@@ -196,6 +196,8 @@ Run the mobile app only:
 ```bash
 bun run dev:native
 ```
+
+Android prebuild, release signing, and store builds (`mobile:prebuild:*`, `mobile:keystore:create`, `mobile:build:aab`, etc.) are documented in [docs/mobile-release-signing.md](docs/mobile-release-signing.md).
 
 ### 4. Check types before opening a pull request
 
@@ -328,7 +330,8 @@ cashory-demo/
 │           └── services/     # Business logic and DB access
 ├── compose/                  # Postgres + Mailpit for local dev
 ├── docs/
-│   └── local-infrastructure.md
+│   ├── local-infrastructure.md
+│   └── mobile-release-signing.md
 ├── scripts/                  # docker:infra:* helpers
 ├── packages/
 │   ├── auth/                 # Better Auth server configuration
@@ -380,9 +383,13 @@ If you plan to distribute or open-source the project, add a license file and upd
 
 ### The Expo app cannot reach the API
 
-- Confirm the server is running.
-- Confirm `EXPO_PUBLIC_SERVER_URL` points to the reachable API host.
-- If testing on a physical device, replace `localhost` with your machine's LAN IP.
+- Confirm the server is running (`bun run dev:server`). The dev server listens on `0.0.0.0:3000` so LAN clients can connect.
+- Confirm `EXPO_PUBLIC_SERVER_URL` in `apps/native/.env` points to a host your phone can reach (not `localhost` on a physical device).
+- **Physical Android/iOS device:** use `http://<your-PC-LAN-IPv4>:3000`. Run `bun run docker:infra:verify` to print a suggested URL under **API (phone)**.
+- **Android emulator:** use `http://10.0.2.2:3000`.
+- On the device browser, open `http://<LAN-IP>:3000/api/auth/get-session`. If that fails, fix Wi‑Fi (same network as the PC) or allow inbound TCP **3000** in Windows Firewall.
+- After changing `EXPO_PUBLIC_*`, restart Metro (`bun run dev:native` with cache clear if needed).
+- If the device browser works but the app shows "Network request failed", rebuild the dev client after `app.config.js` changes (`usesCleartextTraffic` for HTTP).
 
 ### Authentication returns unauthorized
 
@@ -404,10 +411,16 @@ If you plan to distribute or open-source the project, add a license file and upd
 
 ### Metro or Expo behaves inconsistently
 
-- Restart Expo with a cleared cache:
+- Clear Metro and native build caches from `apps/native`:
 
 ```bash
-bun run dev:native
+bun run mobile:prebuild:android:clean
+```
+
+Or only reset Metro:
+
+```bash
+cd apps/native && bun run clear:cache
 ```
 
 - If needed, start Expo directly with:
